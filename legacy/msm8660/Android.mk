@@ -37,6 +37,7 @@ LOCAL_SRC_FILES := \
     audio_hw_hal.cpp
 
 LOCAL_SHARED_LIBRARIES := \
+    liblog          \
     libcutils       \
     libutils        \
     libmedia        \
