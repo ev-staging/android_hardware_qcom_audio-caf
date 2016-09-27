@@ -7447,6 +7447,7 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                in, config, &channel_mask_updated);
         pthread_mutex_unlock(&adev->lock);
 
+#ifdef SSR_ENABLED
         if (!ret_val) {
            if (channel_mask_updated == true) {
                ALOGD("%s: return error to retry with updated channel mask (%#x)",
@@ -7455,7 +7456,9 @@ static int adev_open_input_stream(struct audio_hw_device *dev,
                goto err_open;
            }
            ALOGD("%s: created multi-channel session succesfully",__func__);
-        } else if (audio_extn_compr_cap_enabled() &&
+        } else
+#endif
+        if (audio_extn_compr_cap_enabled() &&
                    audio_extn_compr_cap_format_supported(config->format) &&
                    (in->dev->mode != AUDIO_MODE_IN_COMMUNICATION)) {
             audio_extn_compr_cap_init(in);
