@@ -22,6 +22,11 @@ LOCAL_SRC_FILES:= \
 LOCAL_CFLAGS+= -O2 -fvisibility=hidden
 LOCAL_CFLAGS+= -Wno-error
 
+LOCAL_CFLAGS += \
+    -Wall \
+    -Werror \
+    -Wno-unused-variable \
+
 LOCAL_SHARED_LIBRARIES := \
 	libcutils \
 	liblog \
