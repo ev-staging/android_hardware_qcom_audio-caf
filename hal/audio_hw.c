@@ -76,6 +76,7 @@
 #include "voice_extn.h"
 #include "ip_hdlr_intf.h"
 #include "audio_amplifier.h"
+#include "ultrasound.h"
 
 #include "sound/compress_params.h"
 #include "sound/asound.h"
@@ -355,7 +356,11 @@ const char * const use_case_table[AUDIO_USECASE_MAX] = {
 
     [USECASE_AUDIO_EC_REF_LOOPBACK] = "ec-ref-audio-capture",
 
-    [USECASE_AUDIO_A2DP_ABR_FEEDBACK] = "a2dp-abr-feedback"
+    [USECASE_AUDIO_A2DP_ABR_FEEDBACK] = "a2dp-abr-feedback",
+
+    /* For Elliptic Ultrasound proximity sensor */
+    [USECASE_AUDIO_ULTRASOUND_RX] = "ultrasound-rx",
+    [USECASE_AUDIO_ULTRASOUND_TX] = "ultrasound-tx",
 };
 
 static const audio_usecase_t offload_usecases[] = {
@@ -999,6 +1004,10 @@ int enable_audio_route(struct audio_device *adev,
     audio_extn_sound_trigger_update_stream_status(usecase, ST_EVENT_STREAM_BUSY);
     audio_extn_listen_update_stream_status(usecase, LISTEN_EVENT_STREAM_BUSY);
     audio_extn_utils_send_app_type_cfg(adev, usecase);
+#ifdef ELLIPTIC_ULTRASOUND_ENABLED
+    if (usecase->id != USECASE_AUDIO_ULTRASOUND_RX &&
+        usecase->id != USECASE_AUDIO_ULTRASOUND_TX)
+#endif
     audio_extn_utils_send_audio_calibration(adev, usecase);
     if ((usecase->type == PCM_PLAYBACK) && is_offload_usecase(usecase->id)) {
         out = usecase->stream.out;
@@ -6978,6 +6987,25 @@ static int adev_set_parameters(struct audio_hw_device *dev, const char *kvpairs)
         }
     }
 
+    ret = str_parms_get_int(parms, "ultrasound_enable", &val);
+    if (ret >= 0) {
+        if (val == 1) {
+            us_start();
+        } else {
+            us_stop();
+        }
+    }
+
+    ret = str_parms_get_int(parms, "ultrasound_set_manual_calibration", &val);
+    if (ret >= 0) {
+        us_set_manual_cal(val);
+    }
+
+    ret = str_parms_get_int(parms, "ultrasound_set_sensitivity", &val);
+    if (ret >= 0) {
+        us_set_sensitivity(val);
+    }
+
     audio_extn_set_parameters(adev, parms);
     amplifier_set_parameters(parms);
 done:
@@ -7693,6 +7721,9 @@ static int adev_close(hw_device_t *device)
         free(device);
         adev = NULL;
     }
+
+    us_deinit();
+
     pthread_mutex_unlock(&adev_init_lock);
     enable_gcov();
     return 0;
@@ -8032,6 +8063,8 @@ static int adev_open(const hw_module_t *module, const char *name,
 
     if (amplifier_open(adev) != 0)
         ALOGE("Amplifier initialization failed");
+
+    us_init(adev);
 
     *device = &adev->device.common;
     adev->dsp_bit_width_enforce_mode =
