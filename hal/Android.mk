@@ -124,6 +124,7 @@ endif
 LOCAL_CFLAGS += -Wno-macro-redefined
 
 LOCAL_HEADER_LIBRARIES := libhardware_headers
+LOCAL_HEADER_LIBRARIES += generated_kernel_headers
 
 LOCAL_SRC_FILES := \
     audio_hw.c \
@@ -169,12 +170,6 @@ LOCAL_C_INCLUDES += \
     $(LOCAL_PATH)/$(AUDIO_PLATFORM) \
     $(LOCAL_PATH)/audio_extn \
     $(LOCAL_PATH)/voice_extn
-
-LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
-LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include/audio
-LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/techpack/audio/include
-LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
-
 
 # Hardware specific feature
 ifeq ($(strip $(AUDIO_FEATURE_ENABLED_DLKM)),true)
@@ -245,14 +240,6 @@ ifeq ($(strip $(AUDIO_FEATURE_ENABLED_LISTEN)),true)
     LOCAL_CFLAGS += -DAUDIO_LISTEN_ENABLED
     LOCAL_C_INCLUDES += $(TARGET_OUT_HEADERS)/mm-audio/audio-listen
     LOCAL_SRC_FILES += audio_extn/listen.c
-endif
-
-# Hardware specific feature
-ifeq ($(TARGET_COMPILE_WITH_MSM_KERNEL),true)
-        LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
-        LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include/audio
-        LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/techpack/audio/include
-        LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
 endif
 
 # Legacy feature
